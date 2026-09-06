@@ -30,7 +30,27 @@ static bool has_mp3_extension(const std::string& name) {
 
 extern "C" {
     u32 __nx_applet_type = AppletType_None;
-    size_t __nx_heap_size = 0x200000;
+    size_t nx_inner_heap_size = 0x40000;
+    char nx_inner_heap[0x40000];
+
+    void __libnx_initheap(void) {
+        extern char* fake_heap_start;
+        extern char* fake_heap_end;
+        fake_heap_start = nx_inner_heap;
+        fake_heap_end = nx_inner_heap + nx_inner_heap_size;
+    }
+
+    void __attribute__((weak)) __appInit(void) {
+        smInitialize();
+        fsInitialize();
+        fsdevMountSdmc();
+    }
+
+    void __attribute__((weak)) __appExit(void) {
+        fsdevUnmountAll();
+        fsExit();
+        smExit();
+    }
 }
 
 std::string get_active_track() {
@@ -46,37 +66,22 @@ std::string get_active_track() {
 }
 
 int main(int argc, char **argv) {
-    if (R_FAILED(smInitialize())) return 0;
-    if (R_FAILED(fsInitialize())) { smExit(); return 0; }
-
-    FsFileSystem sdmcFs;
-    if (R_SUCCEEDED(fsOpenSdCardFileSystem(&sdmcFs))) {
-        fsdevMountDevice("sdmc", sdmcFs);
-    } else {
-        fsExit(); smExit(); return 0;
-    }
-
     mkdir("sdmc:/BOOTSOUND", 0777);
 
     std::string track = get_active_track();
     if (track.empty() || track == "none") {
-        fsdevUnmountDevice("sdmc");
-        fsExit(); smExit(); return 0;
+        return 0;
     }
 
     std::string mp3Path = "sdmc:/BOOTSOUND/" + track;
 
     drmp3 mp3;
     if (!drmp3_init_file(&mp3, mp3Path.c_str(), NULL)) {
-        fsdevUnmountDevice("sdmc");
-        fsExit(); smExit(); return 0;
+        return 0;
     }
 
     if (mp3.channels < 1 || mp3.channels > 2) {
         drmp3_uninit(&mp3);
-        fsdevUnmountDevice("sdmc");
-        fsExit();
-        smExit();
         return 0;
     }
 
@@ -92,9 +97,6 @@ int main(int argc, char **argv) {
         if (R_FAILED(openResult) || sampleRate == 0 || channelCount != 2) {
             drmp3_uninit(&mp3);
             audoutExit();
-            fsdevUnmountDevice("sdmc");
-            fsExit();
-            smExit();
             return 0;
         }
 
@@ -106,9 +108,6 @@ int main(int argc, char **argv) {
             audoutStopAudioOut();
             audoutExit();
             drmp3_uninit(&mp3);
-            fsdevUnmountDevice("sdmc");
-            fsExit();
-            smExit();
             return 0;
         }
 
@@ -143,10 +142,6 @@ int main(int argc, char **argv) {
     }
 
     drmp3_uninit(&mp3);
-    fsdevUnmountDevice("sdmc");
-    fsExit();
-    smExit();
-
     return 0;
 }
 
