@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install libnx
-        run: dkp-pacman -S --needed --noconfirm switch-dev switch-sdl2 switch-sdl2_ttf switch-sdl2_gfx switch-freetype switch-harfbuzz
+        run: dkp-pacman -S --needed --noconfirm switch-dev
 
       - name: Build GUI and sysmodule
         run: make

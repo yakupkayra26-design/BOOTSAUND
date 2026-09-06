@@ -14,11 +14,6 @@
 #include <algorithm>
 #include <cctype>
 
-#ifndef BUILD_SYSMODULE
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
-#endif
-
 static bool has_mp3_extension(const std::string& name) {
     if (name.size() < 4) return false;
     std::string extension = name.substr(name.size() - 4);
@@ -157,10 +152,6 @@ int main(int argc, char **argv) {
 
 #else
 
-// ============================================================================
-// GUI BÖLÜMÜ (Arayüz Uygulaması)
-// ============================================================================
-
 extern "C" {
 void __attribute__((weak)) __appInit(void) {
     smInitialize();
@@ -177,209 +168,78 @@ void __attribute__((weak)) __appExit(void) {
 }
 }
 
-enum Language { LANG_TR, LANG_EN };
-Language currentLang = LANG_TR;
-enum Screen { SCREEN_TRACKS, SCREEN_ABOUT };
-Screen currentScreen = SCREEN_TRACKS;
-std::string selectedTrack = "";
 std::vector<std::string> mp3Files;
+std::string selectedTrack;
 int currentHover = 0;
-SDL_Window* window = NULL;
-SDL_Renderer* renderer = NULL;
-TTF_Font* font = NULL;
 
-void create_default_config_if_missing() {
-    mkdir("sdmc:/BOOTSOUND", 0777);
-    std::ifstream check("sdmc:/BOOTSOUND/config.ini");
-    if (!check.is_open()) {
-        std::ofstream out("sdmc:/BOOTSOUND/config.ini");
-        out << "language=TR\nactive_track=none\n";
-    }
-}
-
-void load_config() {
+void loadConfig() {
     std::ifstream file("sdmc:/BOOTSOUND/config.ini");
-    if (!file.is_open()) return;
-    
     std::string line;
     while (std::getline(file, line)) {
-        if (line.rfind("language=", 0) == 0) {
-            std::string l = line.substr(9);
-            currentLang = (l == "EN") ? LANG_EN : LANG_TR;
-        } else if (line.rfind("active_track=", 0) == 0) {
-            selectedTrack = line.substr(13);
-        }
+        if (line.rfind("active_track=", 0) == 0) selectedTrack = line.substr(13);
     }
 }
 
-void save_config() {
-    std::ofstream out("sdmc:/BOOTSOUND/config.ini");
-    out << "language=" << (currentLang == LANG_TR ? "TR" : "EN") << "\n";
-    out << "active_track=" << selectedTrack << "\n";
+void saveConfig() {
+    std::ofstream file("sdmc:/BOOTSOUND/config.ini");
+    file << "language=TR\nactive_track=" << selectedTrack << "\n";
 }
 
-void scan_mp3_files() {
+void scanFiles() {
     mp3Files.clear();
-    DIR* dir = opendir("sdmc:/BOOTSOUND");
-    if (dir) {
-        struct dirent* ent;
-        while ((ent = readdir(dir)) != NULL) {
-            std::string name = ent->d_name;
-            if (has_mp3_extension(name)) {
-                mp3Files.push_back(name);
-            }
-        }
+    DIR* directory = opendir("sdmc:/BOOTSOUND");
+    if (!directory) return;
+    struct dirent* entry;
+    while ((entry = readdir(directory)) != NULL) {
+        if (has_mp3_extension(entry->d_name)) mp3Files.push_back(entry->d_name);
     }
+    closedir(directory);
     std::sort(mp3Files.begin(), mp3Files.end());
     if (mp3Files.empty()) currentHover = 0;
     else if (currentHover >= (int)mp3Files.size()) currentHover = (int)mp3Files.size() - 1;
 }
 
-void draw_text(const std::string& text, int x, int y, int size, SDL_Color color) {
-    if (!font || text.empty()) return;
-    TTF_SetFontSize(font, size);
-    SDL_Surface* surface = TTF_RenderUTF8_Blended(font, text.c_str(), color);
-    if (!surface) return;
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_Rect destination = {x, y, surface->w, surface->h};
-    SDL_FreeSurface(surface);
-    if (texture) {
-        SDL_RenderCopy(renderer, texture, NULL, &destination);
-        SDL_DestroyTexture(texture);
-    }
-}
-
-void draw_panel(const SDL_Rect& panel, SDL_Color color) {
-    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-    SDL_RenderFillRect(renderer, &panel);
-}
-
-void draw_ui() {
-    const SDL_Color white = {235, 240, 245, 255};
-    const SDL_Color muted = {145, 160, 175, 255};
-    const SDL_Color cyan = {42, 196, 205, 255};
-    const SDL_Color green = {80, 205, 130, 255};
-    const SDL_Color background = {17, 24, 32, 255};
-    SDL_SetRenderDrawColor(renderer, background.r, background.g, background.b, 255);
-    SDL_RenderClear(renderer);
-    draw_panel({0, 0, 1280, 86}, {25, 35, 46, 255});
-    draw_text("BOOTSOUND", 44, 22, 34, white);
-    draw_text("CROX", 1090, 28, 22, cyan);
-    draw_text("Nintendo Switch boot audio", 44, 58, 14, muted);
-    draw_panel({0, 86, 250, 634}, {22, 30, 40, 255});
-    draw_panel({24, 132, 202, 58}, currentScreen == SCREEN_TRACKS ? SDL_Color{34, 125, 142, 255} : SDL_Color{22, 30, 40, 255});
-    draw_panel({24, 202, 202, 58}, currentScreen == SCREEN_ABOUT ? SDL_Color{34, 125, 142, 255} : SDL_Color{22, 30, 40, 255});
-    draw_text(currentLang == LANG_TR ? "Sesler" : "Sounds", 50, 149, 21, white);
-    draw_text(currentLang == LANG_TR ? "Hakkinda" : "About", 50, 219, 21, white);
-    draw_text("A Sec   B Geri", 44, 650, 15, muted);
-    draw_text("X Dil   + Cikis", 44, 676, 15, muted);
-    if (currentScreen == SCREEN_ABOUT) {
-        draw_text(currentLang == LANG_TR ? "Hakkinda" : "About", 300, 136, 32, white);
-        draw_text("BootSound", 300, 206, 26, cyan);
-        draw_text("MP3 boot sound manager for Nintendo Switch", 300, 254, 19, muted);
-        draw_text(currentLang == LANG_TR ? "Yapimci" : "Developer", 300, 330, 18, muted);
-        draw_text("CROX", 300, 360, 28, green);
-        draw_text("22.5.0 uyumlulugu icin Atmosphere sysmodule", 300, 430, 17, muted);
-        return;
-    }
-    draw_text(currentLang == LANG_TR ? "Baslangic Sesi" : "Boot Sound", 300, 136, 32, white);
-    draw_text(currentLang == LANG_TR ? "Aktif ses" : "Active sound", 300, 190, 16, muted);
-    draw_text(selectedTrack.empty() ? (currentLang == LANG_TR ? "Secilmedi" : "Not selected") : selectedTrack, 300, 218, 24, green);
-    draw_text(currentLang == LANG_TR ? "MP3 kutuphanesi" : "MP3 library", 300, 290, 20, white);
+void drawConsole() {
+    consoleClear();
+    printf("\x1b[1;1H\x1b[1;36mBOOT SOUND\x1b[0m  |  CROX\n");
+    printf("\x1b[2;1H----------------------------------------\n\n");
+    printf("  Baslangic sesini sec\n");
+    printf("  MP3 klasoru: sdmc:/BOOTSOUND/\n\n");
+    printf("  Aktif: %s\n\n", selectedTrack.empty() || selectedTrack == "none" ? "Yok" : selectedTrack.c_str());
     if (mp3Files.empty()) {
-        draw_panel({300, 340, 820, 88}, {25, 35, 46, 255});
-        draw_text(currentLang == LANG_TR ? "BOOTSOUND klasorune MP3 ekleyin" : "Add MP3 files to BOOTSOUND", 330, 370, 18, muted);
+        printf("  MP3 bulunamadi. SD karta BOOTSOUND klasorune MP3 koy.\n");
     } else {
-        for (size_t i = 0; i < mp3Files.size() && i < 7; i++) {
-            int y = 330 + (int)i * 48;
-            bool selected = (int)i == currentHover;
-            draw_panel({300, y, 820, 40}, selected ? SDL_Color{34, 125, 142, 255} : SDL_Color{25, 35, 46, 255});
-            draw_text(mp3Files[i], 324, y + 9, 17, selected ? white : muted);
-            if (selected) draw_text("A", 1070, y + 9, 17, green);
+        for (size_t index = 0; index < mp3Files.size(); index++) {
+            printf("  %s %s\n", (int)index == currentHover ? ">" : " ", mp3Files[index].c_str());
         }
     }
+    printf("\n  Yukari/Asagi: Sec   A: Kaydet   X: Yenile   +: Cikis\n");
+    consoleUpdate(NULL);
 }
 
-int main(int argc, char **argv) {
-    romfsInit();
-    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
-    TTF_Init();
-    window = SDL_CreateWindow("BootSound", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_SHOWN);
-    renderer = window ? SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED) : NULL;
-    font = TTF_OpenFont("romfs:/font.ttf", 24);
-    if (!font) {
-        PlFontData sharedFont;
-        if (R_SUCCEEDED(plInitialize(PlServiceType_User)) &&
-            R_SUCCEEDED(plGetSharedFontByType(&sharedFont, PlSharedFontType_Standard))) {
-            SDL_RWops* fontData = SDL_RWFromMem(sharedFont.address, sharedFont.size);
-            font = TTF_OpenFontRW(fontData, 1, 24);
-        }
-    }
-    if (!window || !renderer) {
-        if (font) TTF_CloseFont(font);
-        if (renderer) SDL_DestroyRenderer(renderer);
-        if (window) SDL_DestroyWindow(window);
-        TTF_Quit();
-        SDL_Quit();
-        romfsExit();
-        return 1;
-    }
+int main(int argc, char** argv) {
+    consoleInit(NULL);
     padConfigureInput(1, HidNpadStyleSet_NpadStandard);
     PadState pad;
     padInitializeAny(&pad);
-
-    create_default_config_if_missing();
-    load_config();
-    scan_mp3_files();
-
+    mkdir("sdmc:/BOOTSOUND", 0777);
+    loadConfig();
+    scanFiles();
+    drawConsole();
     while (appletMainLoop()) {
         padUpdate(&pad);
-        u64 kDown = padGetButtonsDown(&pad);
-
-        if (kDown & HidNpadButton_Plus) break;
-
-        if (kDown & HidNpadButton_Y) {
-            currentScreen = SCREEN_ABOUT;
+        u64 buttons = padGetButtonsDown(&pad);
+        if (buttons & HidNpadButton_Plus) break;
+        if (!mp3Files.empty() && (buttons & HidNpadButton_Down)) currentHover = (currentHover + 1) % mp3Files.size();
+        if (!mp3Files.empty() && (buttons & HidNpadButton_Up)) currentHover = (currentHover + mp3Files.size() - 1) % mp3Files.size();
+        if (!mp3Files.empty() && (buttons & HidNpadButton_A)) {
+            selectedTrack = mp3Files[currentHover];
+            saveConfig();
         }
-        if (kDown & HidNpadButton_B) {
-            currentScreen = SCREEN_TRACKS;
-        }
-
-        if (currentScreen == SCREEN_ABOUT) {
-            draw_ui();
-            SDL_RenderPresent(renderer);
-            continue;
-        }
-
-        if (kDown & HidNpadButton_X) {
-            currentLang = (currentLang == LANG_TR) ? LANG_EN : LANG_TR;
-            save_config();
-        }
-
-        if (!mp3Files.empty()) {
-            if (kDown & HidNpadButton_Down) {
-                currentHover = (currentHover + 1) % mp3Files.size();
-            }
-            if (kDown & HidNpadButton_Up) {
-                currentHover = (currentHover - 1 + mp3Files.size()) % mp3Files.size();
-            }
-            if (kDown & HidNpadButton_A) {
-                selectedTrack = mp3Files[currentHover];
-                save_config();
-            }
-        }
-
-        draw_ui();
-        SDL_RenderPresent(renderer);
+        if (buttons & HidNpadButton_X) scanFiles();
+        drawConsole();
     }
-
-    TTF_CloseFont(font);
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    TTF_Quit();
-    SDL_Quit();
-    plExit();
-    romfsExit();
+    consoleExit(NULL);
     return 0;
 }
 

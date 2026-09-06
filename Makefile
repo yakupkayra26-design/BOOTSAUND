@@ -5,12 +5,11 @@ BUILD_GUI := build/gui
 BUILD_SYS := build/sysmodule
 
 SOURCES := main.cpp
-INCLUDES := -I. -I.github -I$(DEVKITPRO)/libnx/include -I$(DEVKITPRO)/portlibs/switch/include
+INCLUDES := -I. -I.github -I$(DEVKITPRO)/libnx/include
 ARCH := -march=armv8-a -mtune=cortex-a57 -mtp=soft -fPIE
 
 COMMON_CXXFLAGS := -g -Wall -Wextra -O2 -ffunction-sections -fdata-sections $(ARCH) $(INCLUDES)
-COMMON_LDFLAGS := $(ARCH) -specs=$(DEVKITPRO)/libnx/switch.specs -L$(DEVKITPRO)/libnx/lib -L$(DEVKITPRO)/portlibs/switch/lib -g -Wl,--gc-sections
-GUI_LIBS := -lSDL2_ttf -lSDL2 -lfreetype -lharfbuzz -lSDL2_gfx -lwebp -lpng16 -ljpeg -lbz2 -lz -lEGL -lglapi -ldrm_nouveau -lnx -lstdc++ -lm
+COMMON_LDFLAGS := $(ARCH) -specs=$(DEVKITPRO)/libnx/switch.specs -L$(DEVKITPRO)/libnx/lib -g -Wl,--gc-sections
 
 ifndef DEVKITPRO
 $(error DEVKITPRO is not set. Install devkitPro/libnx before building)
@@ -31,13 +30,13 @@ $(BUILD_SYS)/main.o: $(SOURCES)
 	$(CXX) $(COMMON_CXXFLAGS) -DBUILD_SYSMODULE -MMD -MP -c $< -o $@
 
 $(TARGET_GUI).elf: $(BUILD_GUI)/main.o
-	$(CXX) $^ $(COMMON_LDFLAGS) $(GUI_LIBS) -o $@
+	$(CXX) $^ $(COMMON_LDFLAGS) -lnx -lstdc++ -o $@
 
 $(TARGET_SYS).elf: $(BUILD_SYS)/main.o
 	$(CXX) $^ $(COMMON_LDFLAGS) -lnx -o $@
 
 $(TARGET_GUI).nro: $(TARGET_GUI).elf $(TARGET_GUI).nacp
-	elf2nro $< $@ --nacp=$(TARGET_GUI).nacp --romfsdir=romfs
+	elf2nro $< $@ --nacp=$(TARGET_GUI).nacp
 
 $(TARGET_SYS).nso: $(TARGET_SYS).elf
 	elf2nso $< $@

@@ -56,5 +56,6 @@ veya `active_track=none` ise sessizce sonlanır.
 `/switch/.packages/BootSound/package.ini` konumuna kopyalayın. UltraHand menüsünde
 `BootSound` paketi görünür; `CROX` yapımcı adıyla uygulamayı başlatabilirsiniz.
 
-GUI, YamaNX projesindeki panel tabanli Switch arayuzlerinden ilham alir. ROMFS'teki
-`font.ttf`, YamaNX yazari SertAy'in lisans kosullarina uygun olarak kullanilir.
+Uygulama, Switch'in libnx konsol ekranini kullanir ve SDL/TTF gibi ek runtime
+bagimliliklari olmadan acilir. Amac, emuMMC/Atmosphere baslangicinda secilen MP3
+dosyasini caldirmaktir.
