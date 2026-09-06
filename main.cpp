@@ -4,6 +4,7 @@
 #include <switch.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <dirent.h>
 #include <sys/stat.h>
@@ -100,7 +101,7 @@ int main(int argc, char **argv) {
                 
                 AudioOutBuffer* releasedBuf;
                 u32 releasedCount;
-                audoutWaitPlayFinish(&releasedBuf, &releasedCount, U64_MAX);
+                audoutWaitPlayFinish(&releasedBuf, &releasedCount, UINT64_MAX);
             }
         } while (framesRead > 0);
 
