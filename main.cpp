@@ -161,6 +161,22 @@ int main(int argc, char **argv) {
 // GUI BÖLÜMÜ (Arayüz Uygulaması)
 // ============================================================================
 
+extern "C" {
+void __attribute__((weak)) __appInit(void) {
+    smInitialize();
+    hidInitialize();
+    fsInitialize();
+    fsdevMountSdmc();
+}
+
+void __attribute__((weak)) __appExit(void) {
+    fsdevUnmountAll();
+    fsExit();
+    hidExit();
+    smExit();
+}
+}
+
 enum Language { LANG_TR, LANG_EN };
 Language currentLang = LANG_TR;
 enum Screen { SCREEN_TRACKS, SCREEN_ABOUT };
@@ -291,12 +307,21 @@ int main(int argc, char **argv) {
     window = SDL_CreateWindow("BootSound", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_SHOWN);
     renderer = window ? SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED) : NULL;
     font = TTF_OpenFont("romfs:/font.ttf", 24);
-    if (!window || !renderer || !font) {
+    if (!font) {
+        PlFontData sharedFont;
+        if (R_SUCCEEDED(plInitialize(PlServiceType_User)) &&
+            R_SUCCEEDED(plGetSharedFontByType(&sharedFont, PlSharedFontType_Standard))) {
+            SDL_RWops* fontData = SDL_RWFromMem(sharedFont.address, sharedFont.size);
+            font = TTF_OpenFontRW(fontData, 1, 24);
+        }
+    }
+    if (!window || !renderer) {
         if (font) TTF_CloseFont(font);
         if (renderer) SDL_DestroyRenderer(renderer);
         if (window) SDL_DestroyWindow(window);
         TTF_Quit();
         SDL_Quit();
+        romfsExit();
         return 1;
     }
     padConfigureInput(1, HidNpadStyleSet_NpadStandard);
@@ -353,6 +378,7 @@ int main(int argc, char **argv) {
     SDL_DestroyWindow(window);
     TTF_Quit();
     SDL_Quit();
+    plExit();
     romfsExit();
     return 0;
 }
