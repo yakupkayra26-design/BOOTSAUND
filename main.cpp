@@ -13,6 +13,14 @@
 #include <algorithm>
 #include <cctype>
 
+static bool has_mp3_extension(const std::string& name) {
+    if (name.size() < 4) return false;
+    std::string extension = name.substr(name.size() - 4);
+    std::transform(extension.begin(), extension.end(), extension.begin(),
+                   [](unsigned char character) { return (char)std::tolower(character); });
+    return extension == ".mp3";
+}
+
 #ifdef BUILD_SYSMODULE
 
 // ============================================================================
@@ -34,14 +42,6 @@ std::string get_active_track() {
         }
     }
     return "";
-}
-
-static bool has_mp3_extension(const std::string& name) {
-    if (name.size() < 4) return false;
-    std::string extension = name.substr(name.size() - 4);
-    std::transform(extension.begin(), extension.end(), extension.begin(),
-                   [](unsigned char character) { return (char)std::tolower(character); });
-    return extension == ".mp3";
 }
 
 int main(int argc, char **argv) {
