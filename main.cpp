@@ -285,8 +285,10 @@ void draw_ui() {
 }
 
 int main(int argc, char **argv) {
-    if (romfsInit() != 0 || SDL_Init(SDL_INIT_VIDEO) != 0 || TTF_Init() != 0) return 1;
-    window = SDL_CreateWindow("BootSound", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_FULLSCREEN);
+    romfsInit();
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
+    TTF_Init();
+    window = SDL_CreateWindow("BootSound", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_SHOWN);
     renderer = window ? SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED) : NULL;
     font = TTF_OpenFont("romfs:/font.ttf", 24);
     if (!window || !renderer || !font) {
