@@ -5,7 +5,7 @@ BUILD_GUI := build/gui
 BUILD_SYS := build/sysmodule
 
 SOURCES := main.cpp
-INCLUDES := -I. -I.github
+INCLUDES := -I. -I.github -I$(DEVKITPRO)/libnx/include
 
 COMMON_CXXFLAGS := -g -Wall -Wextra -O2 -ffunction-sections -fdata-sections $(INCLUDES)
 COMMON_LDFLAGS := -specs=$(DEVKITPRO)/libnx/switch.specs -g -Wl,--gc-sections
