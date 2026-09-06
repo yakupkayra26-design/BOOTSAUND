@@ -6,6 +6,7 @@ BUILD_SYS := build/sysmodule
 
 SOURCES := main.cpp
 INCLUDES := -I. -I.github -I$(DEVKITPRO)/libnx/include
+ARCH := -march=armv8-a -mtune=cortex-a57 -mtp=soft -fPIE
 
 COMMON_CXXFLAGS := -g -Wall -Wextra -O2 -ffunction-sections -fdata-sections $(ARCH) $(INCLUDES)
 COMMON_LDFLAGS := $(ARCH) -specs=$(DEVKITPRO)/libnx/switch.specs -L$(DEVKITPRO)/libnx/lib -g -Wl,--gc-sections
