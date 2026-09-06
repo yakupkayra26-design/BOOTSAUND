@@ -7,8 +7,8 @@ BUILD_SYS := build/sysmodule
 SOURCES := main.cpp
 INCLUDES := -I. -I.github -I$(DEVKITPRO)/libnx/include
 
-COMMON_CXXFLAGS := -g -Wall -Wextra -O2 -ffunction-sections -fdata-sections $(INCLUDES)
-COMMON_LDFLAGS := -specs=$(DEVKITPRO)/libnx/switch.specs -L$(DEVKITPRO)/libnx/lib -g -Wl,--gc-sections
+COMMON_CXXFLAGS := -g -Wall -Wextra -O2 -ffunction-sections -fdata-sections $(ARCH) $(INCLUDES)
+COMMON_LDFLAGS := $(ARCH) -specs=$(DEVKITPRO)/libnx/switch.specs -L$(DEVKITPRO)/libnx/lib -g -Wl,--gc-sections
 
 ifndef DEVKITPRO
 $(error DEVKITPRO is not set. Install devkitPro/libnx before building)
