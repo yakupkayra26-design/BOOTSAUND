@@ -1,4 +1,4 @@
-TARGET_GUI := BootSound
+TARGET_GUI := V1
 TARGET_SYS := BootSoundSysmodule
 
 BUILD_GUI := build/gui

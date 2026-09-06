@@ -18,11 +18,11 @@ jobs:
       - name: Upload NRO Output
         uses: actions/upload-artifact@v3
         with:
-          name: BootSound-NRO
-          path: BootSound.nro
+          name: V1-NRO
+          path: V1.nro
 
       - name: Upload NSP Output
         uses: actions/upload-artifact@v3
         with:
-          name: BootSound-NSP
-          path: BootSound.nsp
+          name: BootSound-Sysmodule-NSP
+          path: BootSoundSysmodule.nsp
