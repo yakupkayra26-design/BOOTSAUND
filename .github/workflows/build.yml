@@ -15,17 +15,10 @@ jobs:
         run: dkp-pacman -S --needed --noconfirm switch-dev
 
       - name: Build App
-        run: |
-          make
+        run: make V1.nro
 
       - name: Upload NRO Output
         uses: actions/upload-artifact@v4
         with:
           name: V1-NRO
           path: V1.nro
-
-      - name: Upload NSP Output
-        uses: actions/upload-artifact@v4
-        with:
-          name: BootSound-Sysmodule-NSP
-          path: BootSoundSysmodule.nsp
