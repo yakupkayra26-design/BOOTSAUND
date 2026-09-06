@@ -35,7 +35,7 @@ $(TARGET_GUI).elf: $(BUILD_GUI)/main.o
 $(TARGET_SYS).elf: $(BUILD_SYS)/main.o
 	$(CXX) $^ $(COMMON_LDFLAGS) -lnx -o $@
 
-$(TARGET_GUI).nro: $(TARGET_GUI).elf
+$(TARGET_GUI).nro: $(TARGET_GUI).elf $(TARGET_GUI).nacp
 	elf2nro $< $@ --nacp=$(TARGET_GUI).nacp
 
 $(TARGET_SYS).nsp: $(TARGET_SYS).elf
