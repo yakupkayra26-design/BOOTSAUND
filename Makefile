@@ -36,10 +36,10 @@ $(TARGET_SYS).elf: $(BUILD_SYS)/main.o
 	$(CXX) $^ $(COMMON_LDFLAGS) -lnx -o $@
 
 $(TARGET_GUI).nro: $(TARGET_GUI).elf
-	$(ELF2NRO) $< $@ --nacp=$(TARGET_GUI).nacp
+	elf2nro $< $@ --nacp=$(TARGET_GUI).nacp
 
 $(TARGET_SYS).nsp: $(TARGET_SYS).elf
-	$(ELF2NSP) $< $@
+	elf2nsp $< $@
 
 $(TARGET_GUI).nacp:
 	@printf 'BootSound GUI\n' > $@
