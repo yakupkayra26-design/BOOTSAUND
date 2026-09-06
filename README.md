@@ -28,8 +28,9 @@ parametresi kaldırılmalıdır.
 ## SD kart kurulumu
 
 ```text
-sdmc:/switch/BootSound.nro
+sdmc:/switch/V2.01.nro
 sdmc:/atmosphere/contents/4200000000000077/exefs.nsp
+sdmc:/switch/.packages/BootSound/package.ini
 sdmc:/atmosphere/contents/4200000000000077/flags/boot2
 sdmc:/BOOTSOUND/
 ```
@@ -48,3 +49,12 @@ active_track=ornek.mp3
 Servis, `boot2` bayrağı sayesinde Atmosphere tarafından yüklenir; yapılandırmayı
 okur, MP3'ü `dr_mp3` ile PCM'e çevirir ve `audout` üzerinden çalar. Dosya yoksa
 veya `active_track=none` ise sessizce sonlanır.
+
+## UltraHand
+
+`ultrahand/BootSound/package.ini` dosyasını SD kartta
+`/switch/.packages/BootSound/package.ini` konumuna kopyalayın. UltraHand menüsünde
+`BootSound` paketi görünür; `CROX` yapımcı adıyla uygulamayı başlatabilirsiniz.
+
+GUI, YamaNX projesindeki panel tabanli Switch arayuzlerinden ilham alir. ROMFS'teki
+`font.ttf`, YamaNX yazari SertAy'in lisans kosullarina uygun olarak kullanilir.

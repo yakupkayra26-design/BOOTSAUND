@@ -12,13 +12,15 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install libnx
-        run: dkp-pacman -S --needed --noconfirm switch-dev
+        run: dkp-pacman -S --needed --noconfirm switch-dev switch-sdl2 switch-sdl2_ttf switch-sdl2_gfx switch-freetype switch-harfbuzz
 
-      - name: Build App
-        run: make V1.nro
+      - name: Build GUI and sysmodule
+        run: make
 
-      - name: Upload NRO Output
+      - name: Upload Switch packages
         uses: actions/upload-artifact@v4
         with:
-          name: V1-NRO
-          path: V1.nro
+          name: BootSound-V2.01
+          path: |
+            V2.01.nro
+            BootSoundSysmodule.nsp
